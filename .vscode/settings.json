@@ -19,5 +19,8 @@
     "source.organizeImports": "never"
   },
   "prettier.enable": false,
-  "vite.autoStart": false
+  "vite.autoStart": false,
+  "typescript.preferences.autoImportSpecifierExcludeRegexes": [
+    "node:test"
+  ]
 }
