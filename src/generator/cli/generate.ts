@@ -6,7 +6,7 @@ import { z } from 'zod'
 import { toAbsolutePath } from '../../lib/fsp.js'
 import { isError, urlParseSafe } from '../../lib/prelude.js'
 import { Generator } from '../__.js'
-import { type ConfigInit, OutputCase } from '../config/configInit.js'
+import { type ConfigInit, ImportFormat, OutputCase } from '../config/configInit.js'
 
 const args = Command.create().description(`Generate a type safe GraphQL client.`)
   .parameter(
@@ -56,6 +56,12 @@ const args = Command.create().description(`Generate a type safe GraphQL client.`
       `Try to format the generated files. At attempt to use dprint will be made. You need to have these dependencies installed in your project: @dprint/formatter, @dprint/typescript.`,
     )
       .optional(),
+  )
+  .parameter(
+    `importFormat`,
+    z.nativeEnum(ImportFormat).default(`jsExtension`).describe(
+      `How should import identifiers be generated? For example "tsExtension" would yield modules that import like "import ... from './foo.ts'".`,
+    ),
   )
   .settings({
     parameters: {
@@ -118,6 +124,8 @@ if (defaultSchemaUrl !== undefined) input.defaultSchemaUrl = defaultSchemaUrl
 if (args.format !== undefined) input.format = args.format
 if (args.name !== undefined) input.name = args.name
 if (args.output !== undefined) input.outputDirPath = toAbsolutePath(process.cwd(), args.output)
+
+input.importFormat = args.importFormat
 
 // --- Generate ---
 
