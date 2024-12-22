@@ -1,7 +1,7 @@
 ::: details Example
 
 <div class="ExampleSnippet">
-<a href="../../examples/type_level/selection-sets">Selection Sets</a>
+<a href="../../examples/type-level/selection-sets">Selection Sets</a>
 
 <!-- dprint-ignore-start -->
 ```ts twoslash
