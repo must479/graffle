@@ -291,7 +291,7 @@ export const createDeferred = <$T>(options?: { strict?: boolean }): Deferred<$T>
 }
 
 export const debug = (...args: any[]) => {
-  if (process.env[`DEBUG`]) {
+  if (globalThis.process?.env?.['DEBUG']) {
     console.log(...args)
   }
 }
