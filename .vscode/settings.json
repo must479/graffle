@@ -9,7 +9,8 @@
     "tests/examples": true,
     "website/content/examples": true,
     "website/content/_snippets/examples": true,
-    "website/content/_snippets/example-links": true
+    "website/content/_snippets/example-links": true,
+    "bundle-sizes/**/*": true
   },
   "typescript.tsdk": "node_modules/typescript/lib",
   "typescript.enablePromptUseWorkspaceTsdk": true,
