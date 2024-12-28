@@ -5,27 +5,26 @@ import type { ConfigManager } from '../../lib/config-manager/__.js'
 
 export const Throws = create({
   name: `Throws`,
-  create: () => {
+  create: ({ builder }) => {
     return {
-      builder: (create) =>
-        create<BuilderExtension>(({ client, property, path }) => {
-          if (property !== `throws` || path.length !== 0) return undefined
+      builder: builder<BuilderExtension>(({ client, property, path }) => {
+        if (property !== `throws` || path.length !== 0) return undefined
 
-          // todo redesign input to allow to force throw always
-          // todo pull pre-configured config from core
-          const throwsifiedInput: ConfigInit = {
-            output: {
-              envelope: {
-                enabled: client._.output.envelope.enabled,
-                // @ts-expect-error
-                errors: { execution: false, other: false, schema: false },
-              },
+        // todo redesign input to allow to force throw always
+        // todo pull pre-configured config from core
+        const throwsifiedInput: ConfigInit = {
+          output: {
+            envelope: {
+              enabled: client._.output.envelope.enabled,
               // @ts-expect-error
-              errors: { execution: `throw`, other: `throw`, schema: `throw` },
+              errors: { execution: false, other: false, schema: false },
             },
-          }
-          return () => client.with(throwsifiedInput)
-        }),
+            // @ts-expect-error
+            errors: { execution: `throw`, other: `throw`, schema: `throw` },
+          },
+        }
+        return () => client.with(throwsifiedInput)
+      }),
     }
   },
 })

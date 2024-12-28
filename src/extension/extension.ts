@@ -8,8 +8,7 @@ import type { RequestPipelineBaseInterceptor } from '../requestPipeline/RequestP
 import type { Transport } from '../types/Transport.js'
 import type { Extension } from './__.js'
 import { BuilderExtension } from './builder.js'
-import type { TypeHooks, TypeHooksEmpty } from './TypeHooks.js'
-import type { TypeHooksBuilderCallback } from './TypeHooks.js'
+import { type TypeHooks, type TypeHooksBuilder, typeHooksBuilder, type TypeHooksEmpty } from './TypeHooks.js'
 
 export * from './context.js'
 export * as TypeHooks from './TypeHooks.js'
@@ -50,10 +49,10 @@ export const create = <
     name: $Name
     normalizeConfig?: (...args: $ConfigInputParameters) => $Config
     custom?: $Custom
-    create: (params: { config: $Config }) => {
-      builder?: BuilderExtension.CreatorCallback<$BuilderExtension> // | $BuilderExtension  // todo
+    create: (parameters: { config: $Config; builder: BuilderExtension.Create; typeHooks: TypeHooksBuilder }) => {
+      builder?: $BuilderExtension
+      typeHooks?: TypeHooksBuilder<$TypeHooks>
       onRequest?: RequestPipelineBaseInterceptor
-      typeHooks?: TypeHooksBuilderCallback<$TypeHooks> | $TypeHooks
       transport?: (
         OverloadBuilder: Transport.Builder.Create,
       ) => $TransportCallbackResult
@@ -81,8 +80,12 @@ export const create = <
 > => {
   const extensionConstructor = (input?: object) => {
     const config: $Config = ((definitionInput.normalizeConfig as any)?.(input) ?? {}) as any // eslint-disable-line
-    const extensionBuilder = definitionInput.create({ config })
-    const builder = extensionBuilder.builder?.(BuilderExtension.create)
+    const extensionBuilder = definitionInput.create({
+      config,
+      builder: BuilderExtension.create,
+      typeHooks: typeHooksBuilder,
+    })
+    const builder = extensionBuilder.builder
     const overload = extensionBuilder.transport?.((name) =>
       Anyware.Overload.create({ discriminant: [`transportType`, name] })
     )?.type

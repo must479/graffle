@@ -47,8 +47,12 @@ export namespace States {
   export type Empty = TypeHooksEmpty
 }
 
-export interface TypeHooksBuilderCallback<$TypeHooks extends TypeHooks> {
-  (builder: TypeHooksBuilder): TypeHooksBuilder<$TypeHooks>
+// todo: type-level only, so can be a proxy that allows anything.
+export const typeHooksBuilder: TypeHooksBuilder = {
+  requestResultDataTypes: () => typeHooksBuilder as any,
+  onRequestResult: () => typeHooksBuilder as any,
+  onRequestDocumentRootType: () => typeHooksBuilder as any,
+  type: null as any,
 }
 
 export interface TypeHooksBuilder<$TypeHooks extends TypeHooks = TypeHooksEmpty> {
