@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# `readlink` is needed to support at least npm which symlinks this file into node_modules/.bin
+# The effect of `readlink -f` is to resolve the symlink to its target, so that we can find the actual directory
+# this file is in.
+#
 basedir=$(dirname "$(readlink -f "$0" | sed -e 's,\\,/,g')")
 
 case `uname` in
