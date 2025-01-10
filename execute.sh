@@ -1,6 +1,6 @@
 #!/bin/bash
 
-basedir=$(dirname "$(echo "$0" | sed -e 's,\\,/,g')")
+basedir=$(dirname "$(readlink -f "$0" | sed -e 's,\\,/,g')")
 
 case `uname` in
     *CYGWIN*) basedir=`cygpath -w "$basedir"`;;
