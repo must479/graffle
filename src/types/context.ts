@@ -79,11 +79,13 @@ export namespace ClientTransports {
 
   // dprint-ignore
   export type PreflightCheck<
-    $Context extends Context,
+    $Context,
     $SuccessValue = true,
   > =
+    // @ts-expect-error context constraint missing to avoid TS compare depth limit
     $Context['checkPreflight'] extends false
       ? $SuccessValue
+      // @ts-expect-error context constraint missing to avoid TS compare depth limit
       : PreflightCheck_<$Context['transports'], $SuccessValue>
   // dprint-ignore
   export type PreflightCheck_<
