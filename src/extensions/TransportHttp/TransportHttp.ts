@@ -69,13 +69,13 @@ export type ConfigurationInit = {
 
 export interface ConfigurationInitEmpty {}
 
-export interface TransportHttp<$Input extends PartialOrUndefined<Configuration>> extends Extension {
+export interface TransportHttp<$ConfigurationPartial extends PartialOrUndefined<Configuration>> extends Extension {
   name: `TransportHttp`
   config: Configuration
   transport: {
     name: 'http'
     config: Configuration
-    configInit: $Input
+    configInit: ConfigurationInit
     configDefaults: PartialOrUndefined<Configuration>
     requestPipelineOverload: RequestPipelineOverload
     configurationResolver: Transport.ConfigurationResolver

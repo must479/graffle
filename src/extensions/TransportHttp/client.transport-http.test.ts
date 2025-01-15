@@ -89,6 +89,7 @@ describe(`configuration`, () => {
   test(`can set headers`, async ({ fetch }) => {
     fetch.mockImplementationOnce(() => Promise.resolve(createResponse({ data: { id: `abc` } })))
     const graffle = Graffle.create().transport({ url, headers: { 'x-foo': `bar` } })
+    graffle._.transports.configurations.http.headers
     await graffle.gql`query { id }`.send()
     const request = fetch.mock.calls[0]?.[0]
     expect(request?.headers.get(`x-foo`)).toEqual(`bar`)

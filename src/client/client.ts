@@ -40,15 +40,24 @@ export interface ClientBase<
     $Context,
     gqlOverload<$Context>
   >
+  /**
+   * TODO
+   */
   scalar: null extends $Context['schemaMap'] ? TypeErrorMissingSchemaMap
     : ScalarMethod<
       $Context,
       $Extension
     >
+  /**
+   * TODO
+   */
   transport: TransportMethod<
     $Context,
     $Extension
   >
+  /**
+   * TODO
+   */
   use: UseMethod<
     $Context,
     $Extension

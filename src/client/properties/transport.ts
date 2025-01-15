@@ -4,6 +4,9 @@ import { type Context } from '../../types/context.js'
 import type { Client } from '../client.js'
 import { createProperties } from '../helpers.js'
 
+// todo remove the JSDoc comments below. They will not be shown.
+// Look for a TS issue about conditional types + JSDoc comments. If none, create one.
+
 // dprint-ignore
 export type TransportMethod<
   $Context extends Context,
@@ -15,8 +18,9 @@ export type TransportMethod<
          * Configure the current transport.
          * TODO
          */
-        <config extends PartialOrUndefined<$Context['transports']['registry'][$Context['transports']['current']]['config']>>
-          (config: config):
+        // todo just Partial ?
+        <configInit extends PartialOrUndefined<$Context['transports']['registry'][$Context['transports']['current']]['configInit']>>
+          (configInit: configInit):
             Client<
               {
                 [_ in keyof $Context]:
@@ -25,19 +29,20 @@ export type TransportMethod<
                         registry: $Context['transports']['registry']
                         current: $Context['transports']['current']
                         configurations:
-                          keyof config extends never
+                          keyof configInit extends never
                             ? $Context['transports']['configurations']
                             : {
                                 [configKey in keyof $Context['transports']['configurations']]:
                                   configKey extends $Context['transports']['current']
+                                // todo: a static configuration resolver particular to the transport is needed
                                 // configuration contains a PARTIAL of configuration.
                                 // therefore we have to & the given config, since it may add NEW keys
                                     ? {
                                         [configValueKey in keyof $Context['transports']['configurations'][configKey]]:
-                                          configValueKey extends keyof config
+                                          configValueKey extends keyof configInit
                                             ? unknown
                                             : $Context['transports']['configurations'][configKey][configValueKey]
-                                      } & config
+                                      } & configInit
                                     : $Context['transports']['configurations'][configKey]
                               }
                       }
@@ -51,9 +56,9 @@ export type TransportMethod<
          */
         <
           name extends ClientTransports.GetNames<$Context['transports']>,
-          config extends undefined | $Context['transports']['registry'][name]['config'] = undefined
+          configInit extends undefined | $Context['transports']['registry'][name]['configInit'] = undefined
         >
-          (name: name, config?: config):
+          (name: name, configInit?: configInit):
             Client<
               {
                 [_ in keyof $Context]:
@@ -61,7 +66,7 @@ export type TransportMethod<
                     ? {
                         registry: $Context['transports']['registry']
                         current: name
-                        configurations: keyof config extends never
+                        configurations: keyof configInit extends never
                           ? $Context['transports']['configurations']
                           : {
                             [configKey in keyof $Context['transports']['configurations']]:
@@ -69,11 +74,11 @@ export type TransportMethod<
                                 ?
                                   {
                                     [configValueKey in keyof $Context['transports']['configurations'][configKey]]:
-                                      configValueKey extends keyof config
+                                      configValueKey extends keyof configInit
                                         ? unknown
                                         : $Context['transports']['configurations'][configKey][configValueKey]
-                                  } & config
-                                  & {debug:config}
+                                  } & configInit
+                                  & {debug:configInit}
                                 : $Context['transports']['configurations'][configKey]
                           }
                       }
