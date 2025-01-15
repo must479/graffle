@@ -5,7 +5,7 @@ import { Anyware } from '../lib/anyware/__.js'
 import { type AssertExtendsString } from '../lib/prelude.js'
 import type { TypeFunction } from '../lib/type-function/__.js'
 import type { RequestPipelineBaseInterceptor } from '../requestPipeline/RequestPipeline.js'
-import type { Transport } from '../types/Transport.js'
+import { Transport } from '../types/Transport.js'
 import type { Extension } from './__.js'
 import { BuilderExtension } from './builder.js'
 import { type TypeHooks, type TypeHooksBuilder, typeHooksBuilder, type TypeHooksEmpty } from './TypeHooks.js'
@@ -44,13 +44,19 @@ export const create = <
   $Config extends object = object,
   $Custom extends object = object,
   $TransportCallbackResult extends undefined | Anyware.Overload.Builder = undefined,
+  $ConfigurationDefaults extends object = {},
 >(
-  definitionInput: {
+  definition: {
     name: $Name
-    normalizeConfig?: (...args: $ConfigInputParameters) => $Config
+    configurationDefaults?: $ConfigurationDefaults
+    normalizeConfig?: (current: object, ...args: $ConfigInputParameters) => $Config
     custom?: $Custom
     create: (
-      parameters: { config: $Config; builder: BuilderExtension.CreateCallback; typeHooks: TypeHooksBuilder },
+      parameters: {
+        config: $Config & $ConfigurationDefaults
+        builder: BuilderExtension.CreateCallback
+        typeHooks: TypeHooksBuilder
+      },
     ) => {
       builder?: $BuilderExtension
       typeHooks?: TypeHooksBuilder<$TypeHooks>
@@ -68,6 +74,7 @@ export const create = <
   $TypeHooks,
   $Custom,
   $TransportCallbackResult extends Anyware.Overload.Builder ? {
+      configurationResolver: Transport.ConfigurationResolver
       // todo fixme
       // Names of transports can only be strings but its wider for anyware overloads
       name: AssertExtendsString<$TransportCallbackResult['type']['discriminant'][1]>
@@ -80,9 +87,18 @@ export const create = <
     }
     : undefined
 > => {
-  const extensionConstructor = (input?: object) => {
-    const config: $Config = ((definitionInput.normalizeConfig as any)?.(input) ?? {}) as any // eslint-disable-line
-    const extensionBuilder = definitionInput.create({
+  const extensionConstructor = (newConfigurationInit?: object) => {
+    // todo: "ConfigurationResolver" is an extension-scope concept, but it is being used in this constructor
+    // as if transport-scope. See the the transport variable below for example.
+    // It is a hack that will lead to confusion, bugs, etc.
+    const configurationResolver = definition.normalizeConfig as undefined | Transport.ConfigurationResolver
+      ?? Transport.defaultConfigurationResolver
+
+    const currentConfigurationPartial = definition.configurationDefaults ?? {}
+    const config = configurationResolver(currentConfigurationPartial, newConfigurationInit) as
+      & $Config
+      & $ConfigurationDefaults
+    const extensionBuilder = definition.create({
       config,
       builder: BuilderExtension.createCallback,
       typeHooks: typeHooksBuilder,
@@ -98,10 +114,11 @@ export const create = <
         configInit: undefined as any,
         configDefaults: overload.inputDefaults,
         requestPipelineOverload: overload,
+        configurationResolver,
       }
       : undefined
     const extension: Extension = {
-      name: definitionInput.name,
+      name: definition.name,
       config,
       onRequest: extensionBuilder.onRequest,
       builder,
@@ -116,7 +133,7 @@ export const create = <
     return extension
   }
   extensionConstructor.info = {
-    name: definitionInput.name,
+    name: definition.name,
   }
   return extensionConstructor as any
 }

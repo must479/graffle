@@ -1,10 +1,11 @@
 import { trace, type Tracer } from '@opentelemetry/api'
 import { create } from '../../extension/extension.js'
-import { createConfig } from './config.js'
+import { configurationDefaults, normalizeConfig } from './config.js'
 
 export const Opentelemetry = create({
   name: `Opentelemetry`,
-  normalizeConfig: createConfig,
+  configurationDefaults,
+  normalizeConfig,
   create: ({ config }) => {
     const tracer = trace.getTracer(config.tracerName)
     const startActiveGraffleSpan = startActiveSpan(tracer)

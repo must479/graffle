@@ -3,13 +3,24 @@ import type { RequestPipelineBaseDefinition } from '../requestPipeline/__.js'
 
 export interface Transport {
   name: string
-  requestPipelineOverload: Anyware.Overload
   config: object
   configInit: object
   configDefaults: object | undefined
+  requestPipelineOverload: Anyware.Overload
+  configurationResolver: Transport.ConfigurationResolver
 }
 
 export namespace Transport {
+  export type ConfigurationResolver<
+    $ConfigurationInit extends object = object,
+    $Configuration extends $ConfigurationInit = $ConfigurationInit,
+  > = (currentPartial: Partial<$Configuration>, init?: $ConfigurationInit) => Partial<$Configuration>
+
+  export const defaultConfigurationResolver: ConfigurationResolver = (currentPartial, init) => ({
+    ...currentPartial,
+    ...init,
+  })
+
   export namespace Builder {
     export interface Namespace {
       create: Create

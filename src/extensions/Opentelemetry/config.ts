@@ -1,20 +1,26 @@
-export type Input = {
+import type { Transport } from '../../types/Transport.js'
+
+export type ConfigurationInit = {
   /**
    * @defaultValue `"opentelemetry"`
    */
   tracerName?: string
 }
 
-export type Config = {
+export type Configuration = {
   tracerName: string
 }
 
-export const defaults = {
+export const configurationDefaults = {
   tracerName: `graffle`,
-} satisfies Config
+} satisfies Partial<Configuration>
 
-export const createConfig = (input?: Input): Config => {
-  return {
-    tracerName: input?.tracerName ?? defaults.tracerName,
+export const normalizeConfig: Transport.ConfigurationResolver<ConfigurationInit, Configuration> = (current, init) => {
+  const newConfigurationPartial: Partial<Configuration> = {
+    ...current,
   }
+
+  if (init?.tracerName) newConfigurationPartial.tracerName = init.tracerName
+
+  return newConfigurationPartial
 }

@@ -1,11 +1,12 @@
 import type { GraphQLSchema, IntrospectionOptions } from 'graphql'
 import type { InputIntrospectionOptions } from '../../generator/_.js'
 
-export type ConfigInput = {
+export type ConfigurationInit = {
   /**
-   * The schema instance or endpoint to introspect. By default uses the value the client was constructed with.
+   * The schema instance or endpoint to introspect.
+   * By default uses the value the client was constructed with.
    */
-  schema?: string | URL | GraphQLSchema
+  schema?: SchemaTarget
   /**
    * The introspection query options. By default all kinds of information are sought.
    *
@@ -16,12 +17,14 @@ export type ConfigInput = {
   options?: InputIntrospectionOptions
 }
 
-export type Config = {
-  schema: null | string | URL | GraphQLSchema
+export type Configuration = {
+  schema: SchemaTarget | null
   options: IntrospectionOptions
 }
 
-export const defaults = {
+type SchemaTarget = string | URL | GraphQLSchema
+
+export const configurationDefaults: Configuration = {
   schema: null,
   options: {
     descriptions: true,
@@ -31,11 +34,4 @@ export const defaults = {
     inputValueDeprecation: true,
     oneOf: true,
   },
-} satisfies Config
-
-export const createConfig = (input?: ConfigInput): Config => {
-  return {
-    schema: input?.schema ?? defaults.schema,
-    options: input?.options ?? defaults.options,
-  }
 }

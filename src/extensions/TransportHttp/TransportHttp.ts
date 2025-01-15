@@ -10,6 +10,7 @@ import { mergeRequestInit, searchParamsAppendAll } from '../../lib/http.js'
 import type { httpMethodGet, httpMethodPost } from '../../lib/http.js'
 import { _, isString, type MaybePromise, type PartialOrUndefined } from '../../lib/prelude.js'
 import type { RequestPipeline } from '../../requestPipeline/RequestPipeline.js'
+import type { Transport } from '../../types/Transport.js'
 
 export const MethodMode = {
   post: `post`,
@@ -42,29 +43,31 @@ export type TransportHttpInput = {
 }
 
 export interface TransportHttpConstructor {
-  <$ConfigInit extends ConfigInit = ConfigInitEmpty>(
-    configInit?: $ConfigInit,
-  ): TransportHttp<ConfigManager.MergeDefaultsShallow<ConfigDefaults, $ConfigInit>>
+  <$ConfigurationInit extends ConfigurationInit = ConfigurationInitEmpty>(
+    configurationInit?: $ConfigurationInit,
+  ): TransportHttp<ConfigManager.MergeDefaultsShallow<ConfigurationPartialDefaults, $ConfigurationInit>>
 }
 
 export interface Configuration {
-  url: URL | string
+  url: URL
   methodMode: MethodMode
+  headers?: Headers
+  raw?: RequestInit
+}
+
+export const configurationPartialDefaults = {
+  methodMode: `post`,
+} satisfies Partial<Configuration>
+export type ConfigurationPartialDefaults = typeof configurationPartialDefaults
+
+export type ConfigurationInit = {
+  url?: URL | string
+  methodMode?: MethodMode
   headers?: HeadersInit
   raw?: RequestInit
 }
 
-export interface ConfigDefaults {
-  methodMode: 'post'
-}
-
-export const configDefaults: ConfigDefaults = {
-  methodMode: `post`,
-}
-
-export type ConfigInit = PartialOrUndefined<Configuration>
-
-export interface ConfigInitEmpty {}
+export interface ConfigurationInitEmpty {}
 
 export interface TransportHttp<$Input extends PartialOrUndefined<Configuration>> extends Extension {
   name: `TransportHttp`
@@ -75,6 +78,7 @@ export interface TransportHttp<$Input extends PartialOrUndefined<Configuration>>
     configInit: $Input
     configDefaults: PartialOrUndefined<Configuration>
     requestPipelineOverload: RequestPipelineOverload
+    configurationResolver: Transport.ConfigurationResolver
   }
   typeHooks: TypeHooksEmpty
   onRequest: undefined
@@ -152,12 +156,28 @@ type ExchangeGetRequest = Omit<RequestInit, 'body' | 'method'> & {
 
 export const TransportHttp: TransportHttpConstructor = create({
   name: `TransportHttp`,
-  normalizeConfig: (configInit?: ConfigInit) => {
-    return {
-      ...configDefaults,
-      ...configInit,
-      url: configInit?.url ? new URL(configInit.url) : undefined,
+  configurationDefaults: configurationPartialDefaults,
+  // todo rename to "configurationResolver"
+  normalizeConfig(current: Partial<Configuration>, init?: ConfigurationInit) {
+    const newConfigurationPartial: Partial<Configuration> = {
+      ...current,
     }
+
+    if (init?.headers) {
+      const newHeaders = new Headers(init.headers)
+
+      current?.headers?.forEach((value, name) => {
+        newHeaders.append(name, value)
+      })
+
+      newConfigurationPartial.headers = newHeaders
+    }
+
+    if (init?.url) {
+      newConfigurationPartial.url = new URL(init.url)
+    }
+
+    return newConfigurationPartial
   },
   create({ config }) {
     return {

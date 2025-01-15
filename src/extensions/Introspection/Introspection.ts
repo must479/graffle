@@ -3,7 +3,7 @@ import type { ExtensionChainable } from '../../client/client.js'
 import type { HandleOutput } from '../../client/handleOutput.js'
 import { create } from '../../entrypoints/extensionkit.js'
 import type { ClientTransports, Context } from '../../entrypoints/utilities-for-generated.js'
-import { type ConfigInput, createConfig } from './config.js'
+import { type Configuration, configurationDefaults, type ConfigurationInit } from './config.js'
 
 /**
  * This extension adds a `.introspect` method to the client that will return the introspected schema.
@@ -23,9 +23,14 @@ import { type ConfigInput, createConfig } from './config.js'
  */
 export const Introspection = create({
   name: `Introspection`,
-  normalizeConfig: (input?: ConfigInput) => {
-    const config = createConfig(input)
-    return config
+  configurationDefaults,
+  normalizeConfig(current: Partial<Configuration>, input?: ConfigurationInit) {
+    const newConfigurationPartial: Partial<Configuration> = {
+      ...current,
+    }
+    if (input?.schema) newConfigurationPartial.schema = input.schema
+    if (input?.options) newConfigurationPartial.options = input.options
+    return newConfigurationPartial
   },
   create: ({ config, builder, typeHooks }) => {
     return {
@@ -33,6 +38,7 @@ export const Introspection = create({
       builder: builder<BuilderExtension>(({ client }) => {
         return {
           introspect: async () => {
+            // todo: fixme: use config.schema!! Currently only looked at in the generator!
             const c = client.with({ output: { envelope: false, errors: { execution: `return` } } })
             let introspectionQueryDocument = getIntrospectionQuery(config.options)
             // @ts-expect-error fixme

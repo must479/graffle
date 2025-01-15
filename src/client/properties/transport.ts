@@ -101,48 +101,27 @@ export const transportProperties = createProperties((builder, state) => {
 const reducerTransportConfig = (
   state: Context,
   transportName: string,
-  config: ClientTransportsConfiguration,
+  newConfigurationInit: ClientTransportsConfiguration,
 ): Context => {
-  const newConfiguration = {
-    ...state.transports.configurations[transportName] ?? {},
-    ...config,
-  }
+  const transport = state.transports.registry[transportName]
+  if (!transport) throw new Error(`Unknown transport: ${transportName}`)
 
-  // hack: transport need to provide this function
-  if (transportName === `http`) {
-    // @ts-expect-error
-    if (config.headers) {
-      // @ts-expect-error
-      newConfiguration.headers = {
-        // @ts-expect-error
-        ...state.transports.configurations[transportName]?.headers,
-        // @ts-expect-error
-        ...config.headers,
-      }
-    }
-  }
+  const currentConfigurationPartial = state.transports.configurations[transport.name] ?? {}
 
-  if (transportName === `memory`) {
-    // @ts-expect-error
-    if (config.resolverValues?.context) {
-      // @ts-expect-error
-      newConfiguration.resolverValues.context = config.resolverValues.context
-    }
-    // @ts-expect-error
-    if (config.resolverValues?.root) {
-      // @ts-expect-error
-      newConfiguration.resolverValues.root = config.resolverValues.root
-    }
-  }
+  // todo: Graceful error handling. Clearly track error being from which extension.
+  const newConfigurationPartial = transport.configurationResolver(
+    currentConfigurationPartial,
+    newConfigurationInit,
+  )
 
   return {
     ...state,
     transports: {
       ...state.transports,
-      current: transportName,
+      current: transport.name,
       configurations: {
         ...state.transports.configurations,
-        [transportName]: newConfiguration,
+        [transport.name]: newConfigurationPartial,
       },
     },
   }

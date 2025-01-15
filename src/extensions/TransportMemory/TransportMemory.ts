@@ -7,6 +7,7 @@ import { print } from '../../lib/grafaid/document.js'
 import { execute } from '../../lib/grafaid/execute.js'
 import type { PartialOrUndefined } from '../../lib/prelude.js'
 import type { RequestPipeline } from '../../requestPipeline/RequestPipeline.js'
+import type { Transport } from '../../types/Transport.js'
 
 export interface TransportMemoryConstructor {
   <$ConfigurationInit extends ConfigurationInit = ConfigurationInitEmpty>(
@@ -35,20 +36,29 @@ export interface Configuration {
   }
 }
 
-export type ConfigurationInit = PartialOrUndefined<Configuration>
+export type ConfigurationInit = Partial<Configuration>
 
 export interface ConfigurationInitEmpty {}
 
-export interface TransportMemory<$ConfigInit extends ConfigurationInit = ConfigurationInitEmpty> extends Extension {
+// todo fixme
+// @ts-expect-error - TransportMemory config normalizer has more narrow inputs than base Extension type.
+//                    Need to flip the sup/sub relationship on those inputs.
+export interface TransportMemory<$ConfigurationInit extends ConfigurationInit = ConfigurationInitEmpty>
+  extends Extension
+{
   name: `TransportMemory`
   config: Configuration
-  configInit: $ConfigInit
+  configInit: $ConfigurationInit
   transport: {
     name: 'memory'
     config: Configuration
-    configInit: $ConfigInit
+    configInit: $ConfigurationInit
     configDefaults: PartialOrUndefined<Configuration>
     requestPipelineOverload: RequestPipelineOverload
+    configurationResolver: Transport.ConfigurationResolver<
+      $ConfigurationInit,
+      Configuration extends $ConfigurationInit ? Configuration : never
+    >
   }
   typeHooks: TypeHooksEmpty
   onRequest: undefined
@@ -93,10 +103,22 @@ export interface ExchangeOutput extends PackOutput {}
 
 export const TransportMemory: TransportMemoryConstructor = create({
   name: `TransportMemory`,
-  normalizeConfig: (input?: { schema?: Grafaid.Schema.Schema }) => ({
-    schema: input?.schema ?? undefined,
-  }),
+  normalizeConfig(current: Partial<Configuration>, init?: ConfigurationInit) {
+    const newConfigurationPartial: Partial<Configuration> = {
+      ...current,
+    }
 
+    if (init?.schema) newConfigurationPartial.schema = init.schema
+
+    if (init?.resolverValues) {
+      newConfigurationPartial.resolverValues = {
+        ...current?.resolverValues,
+        ...init.resolverValues,
+      }
+    }
+
+    return newConfigurationPartial
+  },
   create({ config }) {
     return {
       transport(create) {
