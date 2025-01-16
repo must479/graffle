@@ -78,12 +78,14 @@ export const create = <
       // todo fixme
       // Names of transports can only be strings but its wider for anyware overloads
       name: AssertExtendsString<$TransportCallbackResult['type']['discriminant'][1]>
-      config: $TransportCallbackResult['type']['input']
-      configInit: $TransportCallbackResult['type']['inputInit'] extends object
-        ? $TransportCallbackResult['type']['inputInit']
-        : {}
+      configAfterCreate: {} // todo
       configDefaults: $TransportCallbackResult['type']['inputDefaults']
       requestPipelineOverload: $TransportCallbackResult['type']
+      // types
+      config: $TransportCallbackResult['type']['input']
+      configurationInit: $TransportCallbackResult['type']['inputInit'] extends object
+        ? $TransportCallbackResult['type']['inputInit']
+        : {}
     }
     : undefined
 > => {
@@ -111,10 +113,11 @@ export const create = <
       ? {
         name: overload.discriminant[1] as string,
         config: overload.input,
-        configInit: undefined as any,
         configDefaults: overload.inputDefaults,
         requestPipelineOverload: overload,
         configurationResolver,
+        configAfterCreate: undefined as any,
+        configurationInit: undefined as any,
       }
       : undefined
     const extension: Extension = {

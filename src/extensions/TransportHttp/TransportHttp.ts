@@ -45,7 +45,7 @@ export type TransportHttpInput = {
 export interface TransportHttpConstructor {
   <$ConfigurationInit extends ConfigurationInit = ConfigurationInitEmpty>(
     configurationInit?: $ConfigurationInit,
-  ): TransportHttp<ConfigManager.MergeDefaultsShallow<ConfigurationPartialDefaults, $ConfigurationInit>>
+  ): TransportHttp<ConfigurationResolver<ConfigurationPartialDefaults, $ConfigurationInit>>
 }
 
 export interface Configuration {
@@ -69,16 +69,32 @@ export type ConfigurationInit = {
 
 export interface ConfigurationInitEmpty {}
 
+export interface ConfigurationResolverF extends Transport.ConfigurationResolverTF {
+  // @ts-expect-error
+  return: ConfigurationResolver<this['current'], this['init']>
+}
+// dprint-ignore
+export interface ConfigurationResolver<
+  $Current extends Partial<Configuration>,
+  $Init extends ConfigurationInit,
+> extends Partial<Configuration> {
+  url: 'url' extends keyof $Current ? URL : 'url' extends keyof $Init ? URL : undefined
+  methodMode: 'methodMode' extends keyof $Current ? MethodMode : 'methodMode' extends keyof $Init ? MethodMode : undefined
+}
+
 export interface TransportHttp<$ConfigurationPartial extends PartialOrUndefined<Configuration>> extends Extension {
   name: `TransportHttp`
   config: Configuration
   transport: {
     name: 'http'
-    config: Configuration
-    configInit: ConfigurationInit
+    configAfterCreate: $ConfigurationPartial
     configDefaults: PartialOrUndefined<Configuration>
     requestPipelineOverload: RequestPipelineOverload
     configurationResolver: Transport.ConfigurationResolver
+    // Types
+    config: Configuration
+    configurationInit: ConfigurationInit
+    configurationResolverTF: ConfigurationResolverF
   }
   typeHooks: TypeHooksEmpty
   onRequest: undefined
@@ -185,7 +201,7 @@ export const TransportHttp: TransportHttpConstructor = create({
         return create(`http`)
           .config<Configuration>()
           .defaults(config)
-          // .configInit<MergeConfigInitDefaults<$ConfigInit>>()
+          .configInit<ConfigurationInit>()
           .stepWithExtendedInput<{ headers?: HeadersInit }>()(`pack`, {
             slots: {
               searchParams: getRequestEncodeSearchParameters,

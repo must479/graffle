@@ -226,7 +226,12 @@ export namespace Context {
             configurations:
               & Omit<$ClientTransports['configurations'], $Transport['name']>
               & {
-                  [_ in $Transport['name']]: $Transport['configInit']
+                  [_ in $Transport['name']]:
+                    $Transport['configAfterCreate']
+                    // $Transport['configurationResolverTF'] extends Transport.ConfigurationResolverTF
+                    // // Custom Configuration Resolver
+                    // ? ($Transport['configurationResolverTF'] & { init: $Transport['configInit']; current: $Transport['configDefaults'] })['return']
+                    // : $Transport['configDefaults']
                 }
             current: $ClientTransports extends ClientTransports.States.Empty
               ? $Transport['name']

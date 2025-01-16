@@ -36,6 +36,7 @@ const url = new URL(`https://foo.io/api/graphql`)
 test(`when envelope is used then response property is present even if relying on schema url default`, async () => {
   const service = await serveSchema({ schema: schemaPokemon })
   const pokemon = Pokemon.create({ output: { envelope: true } })
+  pokemon._.transports.configurations.http
   const result = await pokemon.query.pokemons({ name: true })
   await service.stop()
   // @ts-expect-error fixme

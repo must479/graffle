@@ -3,11 +3,17 @@ import type { RequestPipelineBaseDefinition } from '../requestPipeline/__.js'
 
 export interface Transport {
   name: string
-  config: object
-  configInit: object
+  /**
+   * The configuration that the transport was created with.
+   */
+  configAfterCreate: object
   configDefaults: object | undefined
   requestPipelineOverload: Anyware.Overload
   configurationResolver: Transport.ConfigurationResolver
+  // Types
+  config: object
+  configurationInit: object
+  configurationResolverTF?: Transport.ConfigurationResolverTF
 }
 
 export namespace Transport {
@@ -20,6 +26,11 @@ export namespace Transport {
     ...currentPartial,
     ...init,
   })
+  export interface ConfigurationResolverTF {
+    current: unknown
+    init: unknown
+    return: unknown
+  }
 
   export namespace Builder {
     export interface Namespace {
